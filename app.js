@@ -10,12 +10,14 @@ let proSettings = JSON.parse(localStorage.getItem('proSettings')) || {
 if (!proSettings.currency) proSettings.currency = 'USD';
 
 let currentOtp = null;
+let currentViewMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
 // --- DOM ELEMENTS ---
 // Navigation
 const navItems = document.querySelectorAll('.nav-item');
 const tabViews = document.querySelectorAll('.tab-view');
 const fabBtn = document.getElementById('fabBtn');
+const monthSelector = document.getElementById('monthSelector');
 
 // Home / Summary
 const balanceAmount = document.getElementById('balanceAmount');
@@ -41,7 +43,7 @@ const currentMonthYear = document.getElementById('currentMonthYear');
 const prevMonthBtn = document.getElementById('prevMonth');
 const nextMonthBtn = document.getElementById('nextMonth');
 const calendarTransactions = document.getElementById('calendarTransactions');
-let currentDate = new Date();
+let currentDate = new Date(); // Only used for Calendar view navigation now
 
 // Chart
 const expenseChartCanvas = document.getElementById('expenseChart');
@@ -78,28 +80,6 @@ const expenseCategories = [
 ];
 
 // --- CORE FUNCTIONS ---
-const checkMonthlyReset = () => {
-    const currentMonthStr = `${new Date().getFullYear()}-${new Date().getMonth()}`;
-    if (!proSettings.lastOpenedMonth) {
-        proSettings.lastOpenedMonth = currentMonthStr;
-        saveState();
-        return;
-    }
-    
-    if (proSettings.lastOpenedMonth !== currentMonthStr) {
-        // Backup old transactions locally
-        const archiveKey = 'archive_' + proSettings.lastOpenedMonth;
-        localStorage.setItem(archiveKey, JSON.stringify(transactions));
-        
-        // Reset everything to zero
-        transactions = [];
-        proSettings.lastOpenedMonth = currentMonthStr;
-        saveState();
-        
-        alert("A new month has started! Your balance has been reset to zero and last month's data has been archived.");
-    }
-};
-
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: proSettings.currency }).format(amount);
 };
@@ -127,11 +107,59 @@ const checkDailyLimit = (dateStr) => {
     return todayExpenses > proSettings.dailyLimit;
 };
 
+// Month Filtering Logic
+const getFilteredTransactions = () => {
+    return transactions.filter(t => t.date.startsWith(currentViewMonth));
+};
+
+const populateMonthSelector = () => {
+    const months = new Set();
+    months.add(currentViewMonth); // Ensure current month is always an option
+    
+    transactions.forEach(t => {
+        months.add(t.date.substring(0, 7)); // Extract YYYY-MM
+    });
+    
+    const sortedMonths = Array.from(months).sort().reverse();
+    
+    monthSelector.innerHTML = '';
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    
+    sortedMonths.forEach(m => {
+        const [year, monthNum] = m.split('-');
+        const label = `${monthNames[parseInt(monthNum) - 1]} ${year}`;
+        const option = document.createElement('option');
+        option.value = m;
+        option.innerText = label;
+        if (m === currentViewMonth) option.selected = true;
+        monthSelector.appendChild(option);
+    });
+};
+
+monthSelector.addEventListener('change', (e) => {
+    currentViewMonth = e.target.value;
+    
+    // Sync Calendar View to selected month
+    const [year, monthNum] = currentViewMonth.split('-');
+    currentDate.setFullYear(parseInt(year));
+    currentDate.setMonth(parseInt(monthNum) - 1);
+    
+    updateAllViews();
+});
+
+const updateAllViews = () => {
+    updateHomeSummary();
+    renderTransactions(searchInput.value);
+    if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+    if(document.getElementById('view-chart').classList.contains('active')) renderChart();
+};
+
 // --- UI UPDATES ---
 const updateHomeSummary = () => {
-    const total = transactions.reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
-    const income = transactions.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
-    const expense = transactions.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    const currentMonthData = getFilteredTransactions();
+    const total = currentMonthData.reduce((acc, t) => acc + (t.type === 'income' ? t.amount : -t.amount), 0);
+    const income = currentMonthData.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const expense = currentMonthData.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
 
     balanceAmount.innerText = formatCurrency(total);
     incomeAmount.innerText = formatCurrency(income);
@@ -140,10 +168,11 @@ const updateHomeSummary = () => {
 
 const renderTransactions = (filterText = '') => {
     transactionsList.innerHTML = '';
-    const filtered = transactions.filter(t => t.description.toLowerCase().includes(filterText.toLowerCase()));
+    const currentMonthData = getFilteredTransactions();
+    const filtered = currentMonthData.filter(t => t.description.toLowerCase().includes(filterText.toLowerCase()));
     
     if (filtered.length === 0) {
-        transactionsList.innerHTML = '<div class="empty-state">No transactions found.</div>';
+        transactionsList.innerHTML = '<div class="empty-state">No transactions found for this month.</div>';
         return;
     }
 
@@ -180,10 +209,8 @@ window.deleteTransaction = (id) => {
     if(confirm("Are you sure you want to delete this transaction?")) {
         transactions = transactions.filter(t => t.id !== id);
         saveState();
-        updateHomeSummary();
-        renderTransactions(searchInput.value);
-        if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
-        if(document.getElementById('view-chart').classList.contains('active')) renderChart();
+        populateMonthSelector();
+        updateAllViews();
     }
 };
 
@@ -210,7 +237,7 @@ const renderCalendar = () => {
 
     for (let i = 1; i <= daysInMonth; i++) {
         const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        const dayData = transactions.filter(t => t.date === dateStr);
+        const dayData = transactions.filter(t => t.date === dateStr); // Still filters ALL transactions for this date
         
         const hasDataClass = dayData.length > 0 ? 'has-data' : '';
         const indicator = dayData.length > 0 ? `<div class="cal-indicator"></div>` : '';
@@ -260,7 +287,8 @@ const renderChart = () => {
     const ctx = expenseChartCanvas.getContext('2d');
     
     const expensesByCategory = {};
-    transactions.filter(t => t.type === 'expense').forEach(t => {
+    const currentMonthData = getFilteredTransactions();
+    currentMonthData.filter(t => t.type === 'expense').forEach(t => {
         const cat = getCategoryData('expense', t.category, t.customCategoryName).label;
         expensesByCategory[cat] = (expensesByCategory[cat] || 0) + t.amount;
     });
@@ -304,7 +332,6 @@ navItems.forEach(item => {
         tabViews.forEach(view => view.classList.remove('active'));
         document.getElementById(targetId).classList.add('active');
 
-        // Trigger view-specific refreshes
         if (targetId === 'view-calendar') renderCalendar();
         if (targetId === 'view-chart') renderChart();
     });
@@ -361,20 +388,29 @@ transactionForm.addEventListener('submit', (e) => {
     transactions.push(transaction);
     saveState();
     
-    // Check limit warning (if expense and pro)
     if (type === 'expense' && checkDailyLimit(dateStr)) {
         alert('⚠️ WARNING: You have exceeded your daily expense limit!');
     }
 
-    updateHomeSummary();
-    renderTransactions(searchInput.value);
-    if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+    populateMonthSelector();
+    
+    // Auto-switch to the month of the newly added transaction
+    const newTxMonth = dateStr.substring(0, 7);
+    if (newTxMonth !== currentViewMonth) {
+        currentViewMonth = newTxMonth;
+        monthSelector.value = currentViewMonth;
+        const [year, monthNum] = currentViewMonth.split('-');
+        currentDate.setFullYear(parseInt(year));
+        currentDate.setMonth(parseInt(monthNum) - 1);
+    }
+
+    updateAllViews();
     
     transactionModal.classList.remove('active');
     transactionForm.reset();
 });
 
-// --- PRO VERSION LOGIC (Serverless API Call) ---
+// --- PRO VERSION LOGIC ---
 const initProState = () => {
     if (proSettings.isPro) {
         proLockedState.style.display = 'none';
@@ -391,8 +427,6 @@ const initProState = () => {
     currencySelect.value = proSettings.currency;
 };
 
-// Removed sendEmailAPI to ensure zero password usage
-
 proVerificationForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const sendBtn = document.getElementById('sendOtpBtn');
@@ -404,7 +438,6 @@ proVerificationForm.addEventListener('submit', (e) => {
         email: document.getElementById('proEmail').value
     };
     
-    // Instantly unlock Pro without needing any passwords or emails
     setTimeout(() => {
         alert("Pro version unlocked successfully! (Email verification bypassed)");
         proSettings.isPro = true;
@@ -414,9 +447,6 @@ proVerificationForm.addEventListener('submit', (e) => {
     }, 500);
 });
 
-// Removed OTP verification listener since it is bypassed
-
-// Profile Settings Limit Logic
 limitToggle.addEventListener('change', (e) => {
     proSettings.limitEnabled = e.target.checked;
     limitInputGroup.style.display = e.target.checked ? 'block' : 'none';
@@ -426,30 +456,48 @@ limitToggle.addEventListener('change', (e) => {
 dailyLimitAmount.addEventListener('input', (e) => {
     proSettings.dailyLimit = parseFloat(e.target.value) || 0;
     saveState();
-    renderTransactions();
+    updateAllViews();
 });
 
 currencySelect.addEventListener('change', (e) => {
     proSettings.currency = e.target.value;
     saveState();
-    updateHomeSummary();
-    renderTransactions(searchInput.value);
-    if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+    updateAllViews();
 });
 
 emailReportBtn.addEventListener('click', () => {
     if (!proSettings.userData) return;
-    const expenses = transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
-    const income = transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-    alert(`Monthly Report Generated Locally!\n\nTotal Income: $${income}\nTotal Expenses: $${expenses}\n\n(Email sending disabled for security)`);
+    const currentMonthData = getFilteredTransactions();
+    const expenses = currentMonthData.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
+    const income = currentMonthData.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
+    
+    const [year, monthNum] = currentViewMonth.split('-');
+    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthName = monthNames[parseInt(monthNum) - 1];
+    
+    alert(`Report for ${monthName} ${year} Generated Locally!\n\nTotal Income: $${income}\nTotal Expenses: $${expenses}\n\n(Email sending disabled for security)`);
 });
 
 // Calendar Controls
-prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() - 1); renderCalendar(); });
-nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
+prevMonthBtn.addEventListener('click', () => { 
+    currentDate.setMonth(currentDate.getMonth() - 1); 
+    // Auto sync dropdown
+    currentViewMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    populateMonthSelector();
+    monthSelector.value = currentViewMonth;
+    updateAllViews();
+});
+
+nextMonthBtn.addEventListener('click', () => { 
+    currentDate.setMonth(currentDate.getMonth() + 1); 
+    // Auto sync dropdown
+    currentViewMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
+    populateMonthSelector();
+    monthSelector.value = currentViewMonth;
+    updateAllViews();
+});
 
 // Init
-checkMonthlyReset();
 initProState();
-updateHomeSummary();
-renderTransactions();
+populateMonthSelector();
+updateAllViews();

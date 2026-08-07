@@ -320,3 +320,15 @@ input:checked + .slider:before { transform: translateX(22px); }
         gap: 16px;
     }
 }
+
+.month-selector {
+    background-color: var(--surface-dark);
+    color: var(--text-main);
+    border: none;
+    padding: 10px 12px;
+    border-radius: var(--border-radius-sm);
+    outline: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+    cursor: pointer;
+}
