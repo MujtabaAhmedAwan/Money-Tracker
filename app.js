@@ -410,10 +410,20 @@ transactionForm.addEventListener('submit', (e) => {
     transactionForm.reset();
 });
 
-// --- PRO VERSION LOGIC ---
-const DOCUMIND_API = 'https://documind-ai-puce.vercel.app/api';
-let pollingInterval = null;
-let currentEmail = null;
+/// --- PRO VERSION LOGIC ---
+let currentOtpHash = null;
+let currentProCodeHash = localStorage.getItem('proCodeHash') || null;
+
+const apiCall = async (url, body) => {
+    const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'API Request Failed');
+    return data;
+};
 
 const initProState = () => {
     if (proSettings.isPro) {
@@ -434,101 +444,104 @@ const initProState = () => {
 proVerificationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('proEmail').value;
-    const name = document.getElementById('proName').value;
-    const phone = document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value;
     const sendBtn = document.getElementById('sendOtpBtn');
-    
-    if(!email || !phone) return;
     
     sendBtn.innerText = 'Sending...';
     sendBtn.disabled = true;
     
     try {
-        const res = await fetch(`${DOCUMIND_API}/request-code`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: email, name: name || 'MoneyTracker User', phone: phone })
-        });
+        const data = await apiCall('/api/request-otp', { email });
+        currentOtpHash = data.hash; // Save the hash for verification
         
-        const data = await res.json();
-        if (res.ok) {
-            currentEmail = email;
-            sendBtn.innerText = 'Send Verification Code';
-            sendBtn.disabled = false;
-            proVerificationForm.style.display = 'none';
-            document.getElementById('otpSection').style.display = 'block';
-        } else {
-            throw new Error(data.error || "Failed to send code");
-        }
+        sendBtn.innerText = 'Send Verification Code';
+        sendBtn.disabled = false;
+        alert("Verification code sent to your email!");
+        
+        proVerificationForm.style.display = 'none';
+        document.getElementById('otpSection').style.display = 'block';
     } catch (error) {
         sendBtn.innerText = 'Send Verification Code';
         sendBtn.disabled = false;
-        alert("Error: " + error.message);
+        alert("Email Error: " + error.message);
     }
 });
 
 document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
-    const codeInput = document.getElementById('otpInput').value;
+    const inputOtp = document.getElementById('otpInput').value;
+    const email = document.getElementById('proEmail').value;
     const verifyBtn = document.getElementById('verifyOtpBtn');
     
-    if (!codeInput) return;
+    if (!currentOtpHash) {
+        alert("Please request an OTP first.");
+        return;
+    }
     
-    verifyBtn.innerText = 'Verifying...';
+    verifyBtn.innerText = 'Verifying & Notifying Admin...';
     verifyBtn.disabled = true;
     
+    const userData = {
+        name: document.getElementById('proName').value,
+        phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
+        email: email
+    };
+    
     try {
-        const res = await fetch(`${DOCUMIND_API}/verify-code`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ email: currentEmail, code: codeInput })
-        });
+        const data = await apiCall('/api/verify-otp', { email, otp: inputOtp, hash: currentOtpHash, userData });
         
-        const data = await res.json();
-        if (res.ok) {
-            document.getElementById('otpSection').style.display = 'none';
-            document.getElementById('waitingSection').style.display = 'block';
-            startAdminPolling();
-        } else {
-            throw new Error(data.error || "Invalid code");
-        }
+        // Save the Pro Code hash securely in localStorage
+        currentProCodeHash = data.proCodeHash;
+        localStorage.setItem('proCodeHash', currentProCodeHash);
+        
+        alert("Email Verified! We have notified the Admin. Please wait for the Admin to send you your PRO CODE.");
+        document.getElementById('otpSection').style.display = 'none';
+        document.getElementById('proCodeSection').style.display = 'block';
     } catch (error) {
+        alert("Error: " + error.message);
         verifyBtn.innerText = 'Verify Email';
         verifyBtn.disabled = false;
-        alert("Error: " + error.message);
     }
 });
 
-const startAdminPolling = () => {
-    if (pollingInterval) clearInterval(pollingInterval);
-    
-    pollingInterval = setInterval(async () => {
-        try {
-            const res = await fetch(`${DOCUMIND_API}/status?email=${encodeURIComponent(currentEmail)}`);
-            const data = await res.json();
-            
-            if (data.status === 'approved') {
-                clearInterval(pollingInterval);
-                
-                alert("Access granted! Pro version unlocked successfully.");
-                proSettings.isPro = true;
-                proSettings.userData = {
-                    name: document.getElementById('proName').value,
-                    phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
-                    email: document.getElementById('proEmail').value
-                };
-                saveState();
-                initProState();
-            } else if (data.status === 'denied') {
-                clearInterval(pollingInterval);
-                alert("Access Denied by Admin.");
-                document.getElementById('waitingSection').style.display = 'none';
-                proVerificationForm.style.display = 'block';
-            }
-        } catch (error) {
-            console.error("Polling error:", error);
+// Since the polling logic removed verifyProCodeBtn, we need to ensure the HTML still has it, 
+// but assuming the original HTML had it based on the user's snippet.
+// Add the event listener for Pro Code verification
+const verifyProCodeBtn = document.getElementById('verifyProCodeBtn');
+if (verifyProCodeBtn) {
+    verifyProCodeBtn.addEventListener('click', async () => {
+        const inputProCode = document.getElementById('proCodeInput').value.trim();
+        const btn = document.getElementById('verifyProCodeBtn');
+        
+        if (!currentProCodeHash) {
+            alert("Session expired. Please verify your email again.");
+            return;
         }
-    }, 3000);
-};
+        
+        btn.innerText = 'Verifying...';
+        btn.disabled = true;
+        
+        try {
+            await apiCall('/api/check-pro-code', { code: inputProCode, hash: currentProCodeHash });
+            
+            alert("Pro version unlocked successfully!");
+            proSettings.isPro = true;
+            proSettings.userData = {
+                name: document.getElementById('proName').value,
+                phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
+                email: document.getElementById('proEmail').value
+            };
+            saveState();
+            initProState();
+            
+            // Clean up
+            localStorage.removeItem('proCodeHash');
+        } catch (error) {
+            alert("Error: " + error.message);
+        } finally {
+            btn.innerText = 'Unlock Pro Access';
+            btn.disabled = false;
+        }
+    });
+}
 
 // ... limit toggle logic follows ...
 
@@ -581,6 +594,22 @@ nextMonthBtn.addEventListener('click', () => {
     monthSelector.value = currentViewMonth;
     updateAllViews();
 });
+
+// Reset Pro Version (For Testing)
+const resetProBtn = document.getElementById('resetProBtn');
+if (resetProBtn) {
+    resetProBtn.addEventListener('click', () => {
+        if (confirm("This will lock the Pro Version and reset your pro data. Continue?")) {
+            proSettings.isPro = false;
+            proSettings.userData = null;
+            proSettings.limitEnabled = false;
+            proSettings.dailyLimit = 0;
+            saveState();
+            localStorage.removeItem('proCodeHash');
+            window.location.reload();
+        }
+    });
+}
 
 // Init
 initProState();
