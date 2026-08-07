@@ -1,0 +1,8 @@
+{
+  "name": "money-tracker",
+  "version": "1.0.0",
+  "description": "Global Money Tracker Pro",
+  "dependencies": {
+    "nodemailer": "^6.9.11"
+  }
+}
