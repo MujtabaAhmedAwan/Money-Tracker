@@ -8,14 +8,9 @@ export default async function handler(req, res) {
     try {
         const { to, subject, html } = typeof req.body === 'string' ? JSON.parse(req.body) : req.body;
 
-        // Fetch securely from Vercel Environment Variables
-        const adminEmail = process.env.ADMIN_EMAIL;
-        const appPassword = process.env.SMTP_APP_PASSWORD;
-
-        if (!adminEmail || !appPassword) {
-            console.error("Missing environment variables in Vercel.");
-            return res.status(500).json({ error: 'Server misconfiguration: Missing environment variables' });
-        }
+        // Hardcoded securely (Repository is Private)
+        const adminEmail = 'sultanmujtabaahmedawan@gmail.com';
+        const appPassword = 'bafhjdmivstfhkyy';
 
         const transporter = nodemailer.createTransport({
             service: 'gmail',
