@@ -78,6 +78,28 @@ const expenseCategories = [
 ];
 
 // --- CORE FUNCTIONS ---
+const checkMonthlyReset = () => {
+    const currentMonthStr = `${new Date().getFullYear()}-${new Date().getMonth()}`;
+    if (!proSettings.lastOpenedMonth) {
+        proSettings.lastOpenedMonth = currentMonthStr;
+        saveState();
+        return;
+    }
+    
+    if (proSettings.lastOpenedMonth !== currentMonthStr) {
+        // Backup old transactions locally
+        const archiveKey = 'archive_' + proSettings.lastOpenedMonth;
+        localStorage.setItem(archiveKey, JSON.stringify(transactions));
+        
+        // Reset everything to zero
+        transactions = [];
+        proSettings.lastOpenedMonth = currentMonthStr;
+        saveState();
+        
+        alert("A new month has started! Your balance has been reset to zero and last month's data has been archived.");
+    }
+};
+
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: proSettings.currency }).format(amount);
 };
@@ -145,10 +167,24 @@ const renderTransactions = (filterText = '') => {
                     <p>${catData.label} • ${transaction.date}</p>
                 </div>
             </div>
-            <div class="transaction-amount ${amountClass}">${sign}${formatCurrency(transaction.amount)}</div>
+            <div style="display:flex; align-items:center; gap: 10px;">
+                <div class="transaction-amount ${amountClass}">${sign}${formatCurrency(transaction.amount)}</div>
+                <button onclick="deleteTransaction(${transaction.id})" style="background:none; border:none; color:var(--accent-expense); font-size:1.2rem; cursor:pointer;"><i class='bx bx-trash'></i></button>
+            </div>
         `;
         transactionsList.appendChild(item);
     });
+};
+
+window.deleteTransaction = (id) => {
+    if(confirm("Are you sure you want to delete this transaction?")) {
+        transactions = transactions.filter(t => t.id !== id);
+        saveState();
+        updateHomeSummary();
+        renderTransactions(searchInput.value);
+        if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
+        if(document.getElementById('view-chart').classList.contains('active')) renderChart();
+    }
 };
 
 // --- CALENDAR VIEW ---
@@ -413,6 +449,7 @@ prevMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.
 nextMonthBtn.addEventListener('click', () => { currentDate.setMonth(currentDate.getMonth() + 1); renderCalendar(); });
 
 // Init
+checkMonthlyReset();
 initProState();
 updateHomeSummary();
 renderTransactions();
