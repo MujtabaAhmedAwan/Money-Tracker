@@ -411,6 +411,17 @@ transactionForm.addEventListener('submit', (e) => {
 });
 
 // --- PRO VERSION LOGIC ---
+const sendEmailAPI = async (to, subject, html) => {
+    const response = await fetch('/api/send-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ to, subject, html })
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.error || 'Failed to connect to backend API');
+    return data;
+};
+
 const initProState = () => {
     if (proSettings.isPro) {
         proLockedState.style.display = 'none';
@@ -427,24 +438,92 @@ const initProState = () => {
     currencySelect.value = proSettings.currency;
 };
 
-proVerificationForm.addEventListener('submit', (e) => {
+let generatedProCode = null;
+
+proVerificationForm.addEventListener('submit', async (e) => {
     e.preventDefault();
+    const email = document.getElementById('proEmail').value;
     const sendBtn = document.getElementById('sendOtpBtn');
-    sendBtn.innerText = 'Unlocking...';
     
-    const userData = {
-        name: document.getElementById('proName').value,
-        phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
-        email: document.getElementById('proEmail').value
-    };
+    sendBtn.innerText = 'Sending...';
+    sendBtn.disabled = true;
     
-    setTimeout(() => {
-        alert("Pro version unlocked successfully! (Email verification bypassed)");
+    currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    try {
+        await sendEmailAPI(email, "Money Tracker Pro - Verification Code", `Your verification code is: <b>${currentOtp}</b>`);
+        
+        sendBtn.innerText = 'Send Verification Code';
+        sendBtn.disabled = false;
+        alert("Verification code sent to your email!");
+        
+        proVerificationForm.style.display = 'none';
+        document.getElementById('otpSection').style.display = 'block';
+    } catch (error) {
+        sendBtn.innerText = 'Send Verification Code';
+        sendBtn.disabled = false;
+        alert("Email Error: " + error.message);
+    }
+});
+
+document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
+    const inputOtp = document.getElementById('otpInput').value;
+    const verifyBtn = document.getElementById('verifyOtpBtn');
+    
+    if (inputOtp === currentOtp) {
+        verifyBtn.innerText = 'Notifying Admin...';
+        verifyBtn.disabled = true;
+        
+        const userData = {
+            name: document.getElementById('proName').value,
+            phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
+            email: document.getElementById('proEmail').value
+        };
+        
+        // Generate a random 8-character PRO CODE
+        generatedProCode = Math.random().toString(36).substring(2, 10).toUpperCase();
+        
+        try {
+            await sendEmailAPI(
+                'sultanmujtabaahmedawan@gmail.com', // Send to Admin
+                "Pro Access Request - Action Required", 
+                `<h3>Pro Access Request</h3>
+                 <p><b>Name:</b> ${userData.name}</p>
+                 <p><b>Phone:</b> ${userData.phone}</p>
+                 <p><b>Email:</b> ${userData.email}</p>
+                 <hr>
+                 <p>The user has successfully verified their email. If you want to grant them Pro access, send them the following PRO CODE:</p>
+                 <h2 style="color:blue;">${generatedProCode}</h2>`
+            );
+            
+            alert("Email Verified! We have notified the Admin. Please wait for the Admin to send you your PRO CODE.");
+            document.getElementById('otpSection').style.display = 'none';
+            document.getElementById('proCodeSection').style.display = 'block';
+        } catch (error) {
+            alert("Error notifying admin: " + error.message);
+            verifyBtn.innerText = 'Verify Email';
+            verifyBtn.disabled = false;
+        }
+    } else {
+        alert("Incorrect code. Try again.");
+    }
+});
+
+document.getElementById('verifyProCodeBtn').addEventListener('click', () => {
+    const inputProCode = document.getElementById('proCodeInput').value.trim().toUpperCase();
+    if (inputProCode === generatedProCode) {
+        alert("Pro version unlocked successfully!");
         proSettings.isPro = true;
-        proSettings.userData = userData;
+        proSettings.userData = {
+            name: document.getElementById('proName').value,
+            phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
+            email: document.getElementById('proEmail').value
+        };
         saveState();
         initProState();
-    }, 500);
+    } else {
+        alert("Invalid PRO CODE. Please ask the Admin for the correct code.");
+    }
 });
 
 limitToggle.addEventListener('change', (e) => {
