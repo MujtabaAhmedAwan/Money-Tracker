@@ -355,81 +355,30 @@ const initProState = () => {
     currencySelect.value = proSettings.currency;
 };
 
-// Send an email securely using the Vercel Backend API
-const sendEmailAPI = async (to, subject, html) => {
-    const response = await fetch('/api/send-email', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ to, subject, html })
-    });
-    
-    const data = await response.json();
-    if (!response.ok) {
-        throw new Error(data.error || 'Failed to connect to backend API');
-    }
-    return data;
-};
+// Removed sendEmailAPI to ensure zero password usage
 
-proVerificationForm.addEventListener('submit', async (e) => {
+proVerificationForm.addEventListener('submit', (e) => {
     e.preventDefault();
-    const email = document.getElementById('proEmail').value;
     const sendBtn = document.getElementById('sendOtpBtn');
+    sendBtn.innerText = 'Unlocking...';
     
-    sendBtn.innerText = 'Sending...';
-    sendBtn.disabled = true;
+    const userData = {
+        name: document.getElementById('proName').value,
+        phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
+        email: document.getElementById('proEmail').value
+    };
     
-    // Generate 6 digit OTP
-    currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    try {
-        await sendEmailAPI(email, "Money Tracker Pro - Verification Code", `Your verification code is: <b>${currentOtp}</b>`);
-        
-        sendBtn.innerText = 'Send Verification Code';
-        sendBtn.disabled = false;
-        alert("Verification code sent to your email!");
-        
-        proVerificationForm.style.display = 'none';
-        otpSection.style.display = 'block';
-    } catch (error) {
-        sendBtn.innerText = 'Send Verification Code';
-        sendBtn.disabled = false;
-        alert("Email Error: " + error.message);
-    }
+    // Instantly unlock Pro without needing any passwords or emails
+    setTimeout(() => {
+        alert("Pro version unlocked successfully! (Email verification bypassed)");
+        proSettings.isPro = true;
+        proSettings.userData = userData;
+        saveState();
+        initProState();
+    }, 500);
 });
 
-verifyOtpBtn.addEventListener('click', async () => {
-    const inputOtp = document.getElementById('otpInput').value;
-    const verifyBtn = document.getElementById('verifyOtpBtn');
-    
-    if (inputOtp === currentOtp) {
-        verifyBtn.innerText = 'Verifying...';
-        verifyBtn.disabled = true;
-        
-        const userData = {
-            name: document.getElementById('proName').value,
-            phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
-            email: document.getElementById('proEmail').value
-        };
-        
-        try {
-            // We notify admin by passing a special keyword or just sending it to the user's email with a note.
-            // Since we don't have ADMIN_EMAIL on frontend anymore, we just send it back to the user's email 
-            // OR the backend could inherently bcc the admin. For simplicity, we just unlock.
-            
-            alert("Pro version unlocked successfully!");
-            proSettings.isPro = true;
-            proSettings.userData = userData;
-            saveState();
-            initProState();
-        } catch (error) {
-            alert("Error finalizing verification: " + error.message);
-            verifyBtn.innerText = 'Verify & Unlock Pro';
-            verifyBtn.disabled = false;
-        }
-    } else {
-        alert("Incorrect code. Try again.");
-    }
-});
+// Removed OTP verification listener since it is bypassed
 
 // Profile Settings Limit Logic
 limitToggle.addEventListener('change', (e) => {
@@ -452,29 +401,11 @@ currencySelect.addEventListener('change', (e) => {
     if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
 });
 
-emailReportBtn.addEventListener('click', async () => {
+emailReportBtn.addEventListener('click', () => {
     if (!proSettings.userData) return;
-    
     const expenses = transactions.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
     const income = transactions.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-    const btn = document.getElementById('emailReportBtn');
-    
-    btn.innerText = 'Sending Report...';
-    btn.disabled = true;
-    
-    try {
-        await sendEmailAPI(
-            proSettings.userData.email, 
-            "Money Tracker - Monthly Report", 
-            `<h2>Your Financial Report</h2><p>Total Income: $${income}</p><p>Total Expenses: $${expenses}</p>`
-        );
-        alert("Report sent successfully to your email!");
-    } catch (error) {
-        alert("Email Error: " + error.message);
-    }
-    
-    btn.innerText = 'Email Monthly Report';
-    btn.disabled = false;
+    alert(`Monthly Report Generated Locally!\n\nTotal Income: $${income}\nTotal Expenses: $${expenses}\n\n(Email sending disabled for security)`);
 });
 
 // Calendar Controls
