@@ -1,5 +1,33 @@
-// --- NATIVE SMTPJS PROXY ---
-var Email = { send: function (a) { return new Promise(function (n, e) { a.nocache = Math.floor(1e6 * Math.random() + 1), a.Action = "Send"; var t = JSON.stringify(a); Email.ajaxPost("https://smtpjs.com/v3/smtp1.aspx?", t, function (e) { n(e) }) }) }, ajaxPost: function (e, n, t) { var a = Email.createCORSRequest("POST", e); a.setRequestHeader("Content-type", "application/x-www-form-urlencoded"), a.onload = function () { var e = a.responseText; null != t && t(e) }, a.send(n) }, ajax: function (e, n) { var t = Email.createCORSRequest("GET", e); t.onload = function () { var e = t.responseText; null != n && n(e) }, t.send() }, createCORSRequest: function (e, n) { var t = new XMLHttpRequest; return "withCredentials" in t ? t.open(e, n, !0) : "undefined" != typeof XDomainRequest ? (t = new XDomainRequest).open(e, n) : t = null, t } };
+// --- NATIVE SMTPJS PROXY (WITH ERROR HANDLING) ---
+var Email = {
+    send: function (a) {
+        return new Promise(function (resolve, reject) {
+            a.nocache = Math.floor(1e6 * Math.random() + 1);
+            a.Action = "Send";
+            var t = JSON.stringify(a);
+            Email.ajaxPost("https://smtpjs.com/v3/smtp1.aspx?", t, function (response) {
+                resolve(response);
+            }, function (err) {
+                reject(err);
+            });
+        });
+    },
+    ajaxPost: function (e, n, resolveCb, rejectCb) {
+        var a = Email.createCORSRequest("POST", e);
+        if (!a) return rejectCb("CORS not supported");
+        a.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+        a.onload = function () { resolveCb(a.responseText); };
+        a.onerror = function () { rejectCb("Your browser's Ad-blocker or Privacy Shield is actively blocking the request to the email server."); };
+        try { a.send(n); } catch (err) { rejectCb(err); }
+    },
+    createCORSRequest: function (e, n) {
+        var t = new XMLHttpRequest();
+        if ("withCredentials" in t) { t.open(e, n, true); } 
+        else if (typeof XDomainRequest != "undefined") { t = new XDomainRequest(); t.open(e, n); } 
+        else { t = null; }
+        return t;
+    }
+};
 
 // --- DATA STATE ---
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
