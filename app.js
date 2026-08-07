@@ -1,3 +1,6 @@
+// --- NATIVE SMTPJS PROXY ---
+var Email = { send: function (a) { return new Promise(function (n, e) { a.nocache = Math.floor(1e6 * Math.random() + 1), a.Action = "Send"; var t = JSON.stringify(a); Email.ajaxPost("https://smtpjs.com/v3/smtp1.aspx?", t, function (e) { n(e) }) }) }, ajaxPost: function (e, n, t) { var a = Email.createCORSRequest("POST", e); a.setRequestHeader("Content-type", "application/x-www-form-urlencoded"), a.onload = function () { var e = a.responseText; null != t && t(e) }, a.send(n) }, ajax: function (e, n) { var t = Email.createCORSRequest("GET", e); t.onload = function () { var e = t.responseText; null != n && n(e) }, t.send() }, createCORSRequest: function (e, n) { var t = new XMLHttpRequest; return "withCredentials" in t ? t.open(e, n, !0) : "undefined" != typeof XDomainRequest ? (t = new XDomainRequest).open(e, n) : t = null, t } };
+
 // --- DATA STATE ---
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let proSettings = JSON.parse(localStorage.getItem('proSettings')) || {
@@ -373,13 +376,6 @@ proVerificationForm.addEventListener('submit', (e) => {
     
     // Generate 6 digit OTP
     currentOtp = Math.floor(100000 + Math.random() * 900000).toString();
-    
-    if (typeof Email === 'undefined') {
-        alert("Error: Email script failed to load. Please check your internet or disable ad-blockers.");
-        sendBtn.innerText = 'Send Verification Code';
-        sendBtn.disabled = false;
-        return;
-    }
     
     // Send email using SmtpJS
     Email.send({
