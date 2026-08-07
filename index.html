@@ -153,13 +153,10 @@
                         <button id="verifyOtpBtn" class="submit-btn">Verify Email</button>
                     </div>
                     
-                    <div id="proCodeSection" style="display: none; margin-top: 20px;">
-                        <p style="color:var(--accent-income); margin-bottom:10px; font-size:0.9rem;"><i class='bx bx-check-circle'></i> Email Verified! Admin has been notified.</p>
-                        <div class="form-group">
-                            <label>Enter PRO CODE provided by Admin</label>
-                            <input type="text" id="proCodeInput" placeholder="e.g. A7X9-K2M1">
-                        </div>
-                        <button id="verifyProCodeBtn" class="submit-btn">Unlock Pro Mode</button>
+                    <div id="waitingSection" style="display: none; margin-top: 20px; text-align: center;">
+                        <i class='bx bx-loader-alt bx-spin' style='font-size: 3rem; color: var(--primary-color); margin-bottom: 10px;'></i>
+                        <p style="color:var(--text-main); margin-bottom:10px; font-size:1.1rem; font-weight: bold;">Waiting for Admin Approval...</p>
+                        <p style="color:var(--text-muted); font-size:0.9rem;">We have notified the Admin. Please wait, this screen will unlock automatically once approved.</p>
                     </div>
                 </div>
             </section>
