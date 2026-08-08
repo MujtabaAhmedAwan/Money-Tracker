@@ -3,48 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Money Tracker Pro</title>
+    <title>Money Tracker</title>
     <!-- Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <!-- Boxicons -->
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- Google Translate Script -->
-    <script type="text/javascript">
-        function googleTranslateElementInit() {
-            new google.translate.TranslateElement({pageLanguage: 'en'}, 'google_translate_element');
-        }
-    </script>
-    <script type="text/javascript" src="//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit"></script>
     <link rel="stylesheet" href="style.css">
-    
-    <style>
-        /* Google Translate specific styling fixes */
-        .goog-te-gadget { font-family: 'Outfit', sans-serif !important; color: var(--text-main) !important; }
-        .goog-te-combo { background: var(--surface-dark); color: var(--text-main); border: 1px solid var(--border-color); padding: 8px; border-radius: 8px; outline: none; }
-        .goog-te-gadget span { display: none; } /* Hide 'Powered by Google' */
-    </style>
 </head>
 <body>
     <main class="app-container">
-        <!-- Top Search Bar -->
-        <header class="top-bar">
-            <div class="search-container">
-                <i class='bx bx-search'></i>
-                <input type="text" id="searchInput" placeholder="Search transactions...">
-            </div>
-            <select id="monthSelector" class="month-selector"></select>
-            <button class="notification-btn"><i class='bx bx-bell'></i></button>
-        </header>
-
+        
         <!-- Tab Views Container -->
         <div class="views-container">
             
             <!-- 1. HOME TAB -->
             <section id="view-home" class="tab-view active">
+                <header class="top-bar">
+                    <div class="search-container">
+                        <i class='bx bx-search'></i>
+                        <input type="text" id="searchInput" placeholder="Search transactions...">
+                    </div>
+                    <select id="monthSelector" class="month-selector"></select>
+                </header>
+
                 <div class="user-info">
-                    <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="User Profile" class="profile-pic">
+                    <img src="https://ui-avatars.com/api/?name=User&background=222&color=facc15" alt="User Profile" class="profile-pic">
                     <div>
                         <p class="greeting">Good Morning,</p>
                         <h1 class="user-name">User</h1>
@@ -54,7 +39,7 @@
                 <div class="balance-section">
                     <div class="main-balance-card">
                         <p class="card-label">Remaining Balance</p>
-                        <h2 class="card-amount" id="balanceAmount">$0.00</h2>
+                        <h2 class="card-amount" id="balanceAmount">0.00</h2>
                     </div>
                     
                     <div class="summary-cards">
@@ -62,14 +47,14 @@
                             <div class="card-icon"><i class='bx bx-down-arrow-alt'></i></div>
                             <div class="card-details">
                                 <p class="card-label">Income</p>
-                                <h3 class="card-amount" id="incomeAmount">$0.00</h3>
+                                <h3 class="card-amount" id="incomeAmount">0.00</h3>
                             </div>
                         </div>
                         <div class="summary-card expense-card">
                             <div class="card-icon"><i class='bx bx-up-arrow-alt'></i></div>
                             <div class="card-details">
                                 <p class="card-label">Expense</p>
-                                <h3 class="card-amount" id="expenseAmount">$0.00</h3>
+                                <h3 class="card-amount" id="expenseAmount">0.00</h3>
                             </div>
                         </div>
                     </div>
@@ -86,158 +71,216 @@
                 </div>
             </section>
 
-            <!-- 2. CALENDAR TAB -->
-            <section id="view-calendar" class="tab-view">
-                <h2>Expense Calendar</h2>
-                <div class="calendar-controls">
-                    <button id="prevMonth"><i class='bx bx-chevron-left'></i></button>
-                    <h3 id="currentMonthYear">Month Year</h3>
-                    <button id="nextMonth"><i class='bx bx-chevron-right'></i></button>
-                </div>
-                <div class="calendar-grid" id="calendarGrid">
-                    <!-- Calendar injected via JS -->
-                </div>
-                <div class="calendar-transactions" id="calendarTransactions">
-                    <!-- Transactions for selected day -->
-                    <p class="empty-state">Select a day to view transactions.</p>
-                </div>
-            </section>
-
-            <!-- 3. CHART TAB -->
+            <!-- 2. CHARTS TAB -->
             <section id="view-chart" class="tab-view">
-                <h2>Expense Analytics</h2>
-                <div class="chart-container">
-                    <canvas id="expenseChart"></canvas>
-                </div>
-                <div class="chart-summary">
-                    <!-- Summary injected via JS -->
-                </div>
-            </section>
-
-            <!-- 4. PRO VERSION TAB -->
-            <section id="view-pro" class="tab-view">
-                <h2>Pro Version Access</h2>
-                <div id="proUnlockedState" style="display: none;" class="pro-unlocked">
-                    <i class='bx bxs-check-circle pro-success-icon'></i>
-                    <h3>Pro Unlocked!</h3>
-                    <p>You have access to budget limits and email reports.</p>
-                    <button id="emailReportBtn" class="primary-btn">Email Monthly Report</button>
+                <header class="chart-header">
+                    <div class="toggle-tabs">
+                        <button class="toggle-tab active" id="tabExpenses">Expenses</button>
+                        <button class="toggle-tab" id="tabIncome">Income</button>
+                    </div>
+                    <div class="filter-dropdown">
+                        <select id="chartPeriodSelect" class="invisible-select">
+                            <option value="week">Week</option>
+                            <option value="month" selected>Month</option>
+                            <option value="year">Year</option>
+                            <option value="period">Period</option>
+                        </select>
+                        <span id="chartPeriodDisplay">Month</span>
+                        <i class='bx bx-chevron-down text-yellow'></i>
+                    </div>
+                </header>
+                
+                <div class="chart-area">
+                    <div class="chart-wrapper">
+                        <canvas id="expenseChart"></canvas>
+                        <div class="chart-center-text" id="chartCenterText">0</div>
+                    </div>
                 </div>
                 
-                <div id="proLockedState" class="pro-locked">
-                    <p>Verify your details to unlock Pro features (Budget Limits, Email Saving).</p>
-                    <form id="proVerificationForm">
-                        <div class="form-group">
-                            <label>Name</label>
-                            <input type="text" id="proName" required placeholder="John Doe">
+                <div class="category-bars-container" id="categoryBarsContainer">
+                    <!-- Injected via JS -->
+                </div>
+            </section>
+
+            <!-- 3. REPORTS TAB -->
+            <section id="view-reports" class="tab-view">
+                <header class="chart-header" style="justify-content: center;">
+                    <div class="toggle-tabs" style="margin:0 auto;">
+                        <button class="toggle-tab active">Analytics</button>
+                        <button class="toggle-tab">Accounts</button>
+                    </div>
+                </header>
+                
+                <div class="report-section">
+                    <div class="report-section-header">
+                        <h3>Monthly Statistics - <span id="reportMonthLabel">Aug</span></h3>
+                        <i class='bx bx-chevron-right'></i>
+                    </div>
+                    <div class="stats-row">
+                        <div class="stat-col">
+                            <p>Expenses</p>
+                            <h4 id="repExpenses">0</h4>
                         </div>
-                        <div class="form-group">
-                            <label>Country Code & Phone Number</label>
-                            <div style="display:flex; gap:10px;">
-                                <select id="proCountryCode" style="width: 140px;"></select>
-                                <input type="tel" id="proPhone" required placeholder="1234567890">
+                        <div class="stat-col">
+                            <p>Income</p>
+                            <h4 id="repIncome">0</h4>
+                        </div>
+                        <div class="stat-col">
+                            <p>Balance</p>
+                            <h4 id="repBalance">0</h4>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="report-section">
+                    <div class="report-section-header">
+                        <h3>Monthly Budget</h3>
+                        <i class='bx bx-chevron-right'></i>
+                    </div>
+                    <div class="budget-row">
+                        <div class="budget-stats">
+                            <div class="budget-line"><p>Budget :</p> <span id="repBudgetLimit">0</span></div>
+                            <div class="budget-line"><p>Expenses :</p> <span id="repBudgetExpense">0</span></div>
+                            <div class="budget-line"><p>Remaining :</p> <span id="repBudgetRem">0</span></div>
+                        </div>
+                        <div class="budget-ring" id="openLimitBtnRep">
+                            <div class="ring-inner">
+                                <i class='bx bx-minus'></i>
+                                <span>Budget Settings</span>
                             </div>
                         </div>
-                        <div class="form-group">
-                            <label>Email Address</label>
-                            <input type="email" id="proEmail" required placeholder="you@example.com">
-                        </div>
-                        <button type="submit" class="submit-btn" id="sendOtpBtn">Send Verification Code</button>
-                    </form>
-
-                    <div id="otpSection" style="display: none; margin-top: 20px;">
-                        <div class="form-group">
-                            <label>Enter 6-digit OTP sent to your email</label>
-                            <input type="text" id="otpInput" maxlength="6" placeholder="123456">
-                        </div>
-                        <button id="verifyOtpBtn" class="submit-btn">Verify Email</button>
-                    </div>
-                    
-                    <div id="waitingSection" style="display: none; margin-top: 20px; text-align: center;">
-                        <i class='bx bx-loader-alt bx-spin' style='font-size: 3rem; color: var(--primary-color); margin-bottom: 10px;'></i>
-                        <p style="color:var(--text-main); margin-bottom:10px; font-size:1.1rem; font-weight: bold;">Waiting for Admin Approval...</p>
-                        <p style="color:var(--text-muted); font-size:0.9rem;">We have notified the Admin. Please wait, this screen will unlock automatically once approved.</p>
                     </div>
                 </div>
             </section>
 
-            <!-- 5. PROFILE TAB -->
+            <!-- 4. PROFILE TAB -->
             <section id="view-profile" class="tab-view">
-                <h2>Profile & Settings</h2>
-                <div class="profile-card">
-                    <img src="https://ui-avatars.com/api/?name=User&background=random&color=fff" alt="User" class="profile-pic-large">
-                    <h3>User</h3>
-                </div>
-                
-                <div class="settings-group">
-                    <h4>Pro Settings</h4>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <p>Daily Expense Limit</p>
-                            <span class="setting-desc">Warn if daily expenses exceed limit</span>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" id="limitToggle" disabled>
-                            <span class="slider round"></span>
-                        </label>
+                <div class="profile-header-card">
+                    <div class="profile-pic-container">
+                        <i class='bx bx-building-house'></i>
                     </div>
-                    <div class="form-group" id="limitInputGroup" style="display: none; margin-top: 10px;">
-                        <input type="number" id="dailyLimitAmount" placeholder="Limit Amount" step="0.01">
+                    <div class="profile-name-info">
+                        <h2>Sultan Mujtaba Ahmed Awan</h2>
+                        <p>ID: 2055164</p>
                     </div>
                 </div>
 
-                <div class="settings-group">
-                    <h4>General</h4>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <p>Currency</p>
-                        </div>
-                        <select id="currencySelect" style="background:var(--surface-dark); color:var(--text-main); border:1px solid var(--border-color); padding:8px; border-radius:8px; outline:none;">
-                            <!-- Populated via JS with 180 currencies -->
-                        </select>
+                <div class="menu-list">
+                    <div class="menu-item">
+                        <i class='bx bx-like text-yellow'></i>
+                        <span>Recommend to friends</span>
+                        <i class='bx bx-chevron-right arrow'></i>
                     </div>
-                    <div class="setting-item">
-                        <div class="setting-info">
-                            <p>Language</p>
-                        </div>
-                        <!-- Google Translate Widget Container -->
-                        <div id="google_translate_element"></div>
+                    <div class="menu-item">
+                        <i class='bx bx-leaf text-yellow'></i>
+                        <span>Garden</span>
+                        <i class='bx bx-chevron-right arrow'></i>
                     </div>
-                    <button class="settings-action-btn"><i class='bx bx-share-alt'></i> <span>Share App</span></button>
+                    <div class="menu-item" id="openSettingsBtn">
+                        <i class='bx bx-cog text-yellow'></i>
+                        <span>Settings</span>
+                        <i class='bx bx-chevron-right arrow'></i>
+                    </div>
+                    <div class="menu-item">
+                        <i class='bx bx-watch text-yellow'></i>
+                        <span>Our Other Apps</span>
+                        <i class='bx bx-chevron-right arrow'></i>
+                    </div>
+                </div>
+            </section>
+            
+            <!-- 5. SETTINGS VIEW -->
+            <section id="view-settings" class="tab-view full-screen-view">
+                <header class="settings-header">
+                    <i class='bx bx-arrow-back' id="backToProfileBtn"></i>
+                    <h2>Settings</h2>
+                </header>
+                
+                <div class="settings-list-scroll">
+                    <div class="menu-item"><i class='bx bx-user text-yellow'></i><span>My Profile</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-share-alt text-yellow'></i><span>Data Sharing</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-category text-yellow'></i><span>Category settings</span><i class='bx bx-chevron-right arrow'></i></div>
                     
-                    <button id="resetProBtn" class="settings-action-btn" style="color: #ef4444; margin-top: 15px; border: 1px solid #ef4444; background: transparent;">
-                        <i class='bx bx-lock-alt'></i> <span>Lock Pro Version (For Testing)</span>
-                    </button>
+                    <div class="menu-item">
+                        <i class='bx bx-dollar-circle text-yellow'></i>
+                        <span>Default currency</span>
+                        <div class="setting-right-val">
+                            <select id="currencySelect" class="invisible-select"></select>
+                            <span id="currencyValDisplay" style="color:var(--text-muted); font-size: 0.8rem;">USD</span>
+                            <i class='bx bx-chevron-right arrow'></i>
+                        </div>
+                    </div>
+
+                    <div class="menu-item"><i class='bx bx-bell text-yellow'></i><span>Reminder</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-refresh text-yellow'></i><span>Recurring Transactions</span><i class='bx bx-chevron-right arrow'></i></div>
+                    
+                    <div class="menu-item">
+                        <i class='bx bx-calendar text-yellow'></i>
+                        <span>Monthly Start Date</span>
+                        <div class="setting-right-val">
+                            <span class="badge-yellow">1st</span>
+                            <i class='bx bx-chevron-right arrow'></i>
+                        </div>
+                    </div>
+
+                    <div class="menu-item"><i class='bx bx-palette text-yellow'></i><span>Themes</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-font text-yellow'></i><span>Font Size</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-home text-yellow'></i><span>Home page settings</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-book text-yellow'></i><span>My Cash Books</span><i class='bx bx-chevron-right arrow'></i></div>
+                    <div class="menu-item"><i class='bx bx-wallet text-yellow'></i><span>Accounts</span><i class='bx bx-chevron-right arrow'></i></div>
+                    
+                    <div class="menu-item" id="openLimitBtn">
+                        <i class='bx bx-target-lock text-yellow'></i>
+                        <span>Budget Limit</span>
+                        <i class='bx bx-chevron-right arrow'></i>
+                    </div>
+
+                    <div class="menu-item"><i class='bx bx-export text-yellow'></i><span>Export Data</span><i class='bx bx-chevron-right arrow'></i></div>
+                    
+                    <div class="menu-item">
+                        <i class='bx bx-volume-full text-yellow'></i>
+                        <span>Sound Effect</span>
+                        <label class="switch"><input type="checkbox" checked><span class="slider round"></span></label>
+                    </div>
+                    
+                    <div class="menu-item">
+                        <i class='bx bx-calculator text-yellow'></i><span>Calculator</span><i class='bx bx-chevron-right arrow'></i>
+                    </div>
+                    
+                    <div class="menu-item" id="deleteDataBtn">
+                        <i class='bx bx-trash text-yellow'></i><span>Delete all data</span><i class='bx bx-chevron-right arrow'></i>
+                    </div>
                 </div>
             </section>
 
         </div>
 
-        <!-- Floating Action Button -->
-        <button class="fab-btn" id="fabBtn" aria-label="Add Transaction">
-            <i class='bx bx-plus'></i>
-        </button>
+        <!-- Floating Action Button (Center of Bottom Nav) -->
+        <div class="fab-wrapper">
+            <button class="fab-btn" id="fabBtn" aria-label="Add Transaction">
+                <i class='bx bx-plus'></i>
+            </button>
+        </div>
 
         <!-- Bottom Navigation -->
         <nav class="bottom-nav">
             <div class="nav-item active" data-target="view-home">
-                <i class='bx bxs-home'></i>
+                <i class='bx bx-home-alt'></i>
                 <span>Home</span>
             </div>
-            <div class="nav-item" data-target="view-calendar">
-                <i class='bx bxs-calendar'></i>
-                <span>Calendar</span>
-            </div>
             <div class="nav-item" data-target="view-chart">
-                <i class='bx bxs-pie-chart-alt-2'></i>
-                <span>Chart</span>
+                <i class='bx bx-pie-chart-alt'></i>
+                <span>Charts</span>
             </div>
-            <div class="nav-item" data-target="view-pro">
-                <i class='bx bxs-crown'></i>
-                <span>Pro</span>
+            
+            <div class="nav-item-spacer"></div>
+            
+            <div class="nav-item" data-target="view-reports">
+                <i class='bx bx-file'></i>
+                <span>Reports</span>
             </div>
             <div class="nav-item" data-target="view-profile">
-                <i class='bx bxs-user'></i>
+                <i class='bx bx-user'></i>
                 <span>Profile</span>
             </div>
         </nav>
@@ -279,8 +322,36 @@
                         <label for="customCategory">Custom Category Name</label>
                         <input type="text" id="customCategory" placeholder="Enter category name">
                     </div>
-                    <button type="submit" class="submit-btn">Save Transaction</button>
+                    <button type="submit" class="submit-btn">Save</button>
                 </form>
+            </div>
+        </div>
+
+        <!-- Set Daily Limit Modal -->
+        <div class="modal-overlay" id="limitModal">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h2>Budget Settings</h2>
+                    <button class="close-modal-btn" id="closeLimitBtn"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="setting-item" style="background: transparent; padding: 0 0 16px 0; margin-bottom: 16px; border-bottom: 1px solid var(--border-color);">
+                    <div class="setting-info">
+                        <p style="color: var(--text-main); font-weight: 500;">Enable Daily Limit</p>
+                        <span class="setting-desc">Warn if daily expenses exceed limit</span>
+                    </div>
+                    <label class="switch">
+                        <input type="checkbox" id="limitToggle">
+                        <span class="slider round"></span>
+                    </label>
+                </div>
+                <div class="form-group" id="limitInputGroup" style="display: none;">
+                    <label for="dailyLimitAmount">Limit Amount</label>
+                    <div class="input-with-icon">
+                        <i class='bx bx-money'></i>
+                        <input type="number" id="dailyLimitAmount" placeholder="0.00" step="0.01">
+                    </div>
+                </div>
+                <button id="saveLimitBtn" class="submit-btn">Save Settings</button>
             </div>
         </div>
 

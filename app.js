@@ -1,15 +1,12 @@
 // --- DATA STATE ---
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
-let proSettings = JSON.parse(localStorage.getItem('proSettings')) || {
-    isPro: false,
-    dailyLimit: 0,
+let settings = JSON.parse(localStorage.getItem('settings')) || {
+    currency: 'USD',
     limitEnabled: false,
-    userData: null,
-    currency: 'USD'
+    dailyLimit: 0
 };
-if (!proSettings.currency) proSettings.currency = 'USD';
+if (!settings.currency) settings.currency = 'USD';
 
-let currentOtp = null;
 let currentViewMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
 // --- DOM ELEMENTS ---
@@ -37,74 +34,90 @@ const customCategoryGroup = document.getElementById('customCategoryGroup');
 const customCategoryInput = document.getElementById('customCategory');
 const transactionDateInput = document.getElementById('transactionDate');
 
-// Calendar
-const calendarGrid = document.getElementById('calendarGrid');
-const currentMonthYear = document.getElementById('currentMonthYear');
-const prevMonthBtn = document.getElementById('prevMonth');
-const nextMonthBtn = document.getElementById('nextMonth');
-const calendarTransactions = document.getElementById('calendarTransactions');
-let currentDate = new Date(); // Only used for Calendar view navigation now
+// Settings & Profile
+const openSettingsBtn = document.getElementById('openSettingsBtn');
+const backToProfileBtn = document.getElementById('backToProfileBtn');
+const currencySelect = document.getElementById('currencySelect');
+const currencyValDisplay = document.getElementById('currencyValDisplay');
+const openLimitBtn = document.getElementById('openLimitBtn');
+const deleteDataBtn = document.getElementById('deleteDataBtn');
 
-// Chart
-const expenseChartCanvas = document.getElementById('expenseChart');
-let expenseChartInstance = null;
-
-// Pro & Profile
-const proLockedState = document.getElementById('proLockedState');
-const proUnlockedState = document.getElementById('proUnlockedState');
-const proVerificationForm = document.getElementById('proVerificationForm');
-const otpSection = document.getElementById('otpSection');
-const verifyOtpBtn = document.getElementById('verifyOtpBtn');
-const proCountryCode = document.getElementById('proCountryCode');
+// Limits Modal
+const limitModal = document.getElementById('limitModal');
+const closeLimitBtn = document.getElementById('closeLimitBtn');
 const limitToggle = document.getElementById('limitToggle');
 const limitInputGroup = document.getElementById('limitInputGroup');
 const dailyLimitAmount = document.getElementById('dailyLimitAmount');
-const emailReportBtn = document.getElementById('emailReportBtn');
-const currencySelect = document.getElementById('currencySelect');
+const saveLimitBtn = document.getElementById('saveLimitBtn');
+const openLimitBtnRep = document.getElementById('openLimitBtnRep');
+
+// Chart Elements
+const expenseChartCanvas = document.getElementById('expenseChart');
+const chartCenterText = document.getElementById('chartCenterText');
+const tabExpenses = document.getElementById('tabExpenses');
+const tabIncome = document.getElementById('tabIncome');
+const categoryBarsContainer = document.getElementById('categoryBarsContainer');
+let expenseChartInstance = null;
+let currentChartType = 'expense'; // 'expense' or 'income'
+
+// Reports Elements
+const reportMonthLabel = document.getElementById('reportMonthLabel');
+const repExpenses = document.getElementById('repExpenses');
+const repIncome = document.getElementById('repIncome');
+const repBalance = document.getElementById('repBalance');
+const repBudgetLimit = document.getElementById('repBudgetLimit');
+const repBudgetExpense = document.getElementById('repBudgetExpense');
+const repBudgetRem = document.getElementById('repBudgetRem');
 
 // --- CATEGORIES ---
 const incomeCategories = [
-    { id: 'salary', label: 'Salary', icon: 'bx-briefcase', colorClass: 'cat-icon-salary' },
-    { id: 'investment', label: 'Investment', icon: 'bx-line-chart', colorClass: 'cat-icon-investment' },
-    { id: 'part-time', label: 'Part-time', icon: 'bx-time', colorClass: 'cat-icon-part-time' },
-    { id: 'bonus', label: 'Bonus', icon: 'bx-gift', colorClass: 'cat-icon-bonus' },
-    { id: 'custom', label: 'Custom (+)', icon: 'bx-plus-circle', colorClass: 'cat-icon-custom' }
+    { id: 'salary', label: 'Salary', icon: 'bx-briefcase', colorClass: 'cat-icon-salary', colorHex: '#10b981' },
+    { id: 'investment', label: 'Investment', icon: 'bx-line-chart', colorClass: 'cat-icon-investment', colorHex: '#3b82f6' },
+    { id: 'part-time', label: 'Part-time', icon: 'bx-time', colorClass: 'cat-icon-part-time', colorHex: '#8b5cf6' },
+    { id: 'bonus', label: 'Bonus', icon: 'bx-gift', colorClass: 'cat-icon-bonus', colorHex: '#facc15' },
+    { id: 'custom', label: 'Custom (+)', icon: 'bx-plus-circle', colorClass: 'cat-icon-custom', colorHex: '#a8a29e' }
 ];
 
 const expenseCategories = [
-    { id: 'food', label: 'Food & Dining', icon: 'bx-restaurant', colorClass: 'cat-icon-food' },
-    { id: 'transport', label: 'Transport', icon: 'bx-car', colorClass: 'cat-icon-transport' },
-    { id: 'utilities', label: 'Utilities', icon: 'bx-bulb', colorClass: 'cat-icon-utilities' },
-    { id: 'entertainment', label: 'Entertainment', icon: 'bx-movie-play', colorClass: 'cat-icon-entertainment' },
-    { id: 'custom', label: 'Custom (+)', icon: 'bx-plus-circle', colorClass: 'cat-icon-custom' }
+    { id: 'food', label: 'Food', icon: 'bx-restaurant', colorClass: 'cat-icon-food', colorHex: '#10b981' },
+    { id: 'transport', label: 'Transportation', icon: 'bx-car', colorClass: 'cat-icon-transport', colorHex: '#f472b6' },
+    { id: 'utilities', label: 'Utilities', icon: 'bx-bulb', colorClass: 'cat-icon-utilities', colorHex: '#06b6d4' },
+    { id: 'entertainment', label: 'Entertainment', icon: 'bx-movie-play', colorClass: 'cat-icon-entertainment', colorHex: '#ec4899' },
+    { id: 'custom', label: 'Custom (+)', icon: 'bx-plus-circle', colorClass: 'cat-icon-custom', colorHex: '#a8a29e' }
 ];
+
+const allCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD', 'PKR'];
 
 // --- CORE FUNCTIONS ---
 const formatCurrency = (amount) => {
-    return new Intl.NumberFormat(undefined, { style: 'currency', currency: proSettings.currency }).format(amount);
+    return new Intl.NumberFormat(undefined, { style: 'currency', currency: settings.currency }).format(amount);
+};
+
+const formatNumber = (amount) => {
+    return new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(amount);
 };
 
 const saveState = () => {
     localStorage.setItem('transactions', JSON.stringify(transactions));
-    localStorage.setItem('proSettings', JSON.stringify(proSettings));
+    localStorage.setItem('settings', JSON.stringify(settings));
 };
 
 const getCategoryData = (type, categoryId, customName = '') => {
     const list = type === 'income' ? incomeCategories : expenseCategories;
     let cat = list.find(c => c.id === categoryId);
-    if (categoryId === 'custom') return { label: customName || 'Custom', icon: 'bx-category', colorClass: 'cat-icon-custom' };
-    return cat || { label: 'Other', icon: 'bx-category', colorClass: 'cat-icon-custom' };
+    if (categoryId === 'custom') return { label: customName || 'Custom', icon: 'bx-category', colorClass: 'cat-icon-custom', colorHex: '#a8a29e' };
+    return cat || { label: 'Other', icon: 'bx-category', colorClass: 'cat-icon-custom', colorHex: '#a8a29e' };
 };
 
-// Check Daily Limit (Pro Feature)
+// Check Daily Limit
 const checkDailyLimit = (dateStr) => {
-    if (!proSettings.isPro || !proSettings.limitEnabled || proSettings.dailyLimit <= 0) return false;
+    if (!settings.limitEnabled || settings.dailyLimit <= 0) return false;
     
     const todayExpenses = transactions
         .filter(t => t.type === 'expense' && t.date === dateStr)
         .reduce((sum, t) => sum + t.amount, 0);
         
-    return todayExpenses > proSettings.dailyLimit;
+    return todayExpenses > settings.dailyLimit;
 };
 
 // Month Filtering Logic
@@ -114,16 +127,12 @@ const getFilteredTransactions = () => {
 
 const populateMonthSelector = () => {
     const months = new Set();
-    months.add(currentViewMonth); // Ensure current month is always an option
-    
-    transactions.forEach(t => {
-        months.add(t.date.substring(0, 7)); // Extract YYYY-MM
-    });
-    
+    months.add(currentViewMonth); 
+    transactions.forEach(t => { months.add(t.date.substring(0, 7)); });
     const sortedMonths = Array.from(months).sort().reverse();
     
     monthSelector.innerHTML = '';
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
     
     sortedMonths.forEach(m => {
         const [year, monthNum] = m.split('-');
@@ -138,20 +147,14 @@ const populateMonthSelector = () => {
 
 monthSelector.addEventListener('change', (e) => {
     currentViewMonth = e.target.value;
-    
-    // Sync Calendar View to selected month
-    const [year, monthNum] = currentViewMonth.split('-');
-    currentDate.setFullYear(parseInt(year));
-    currentDate.setMonth(parseInt(monthNum) - 1);
-    
     updateAllViews();
 });
 
 const updateAllViews = () => {
     updateHomeSummary();
     renderTransactions(searchInput.value);
-    if(document.getElementById('view-calendar').classList.contains('active')) renderCalendar();
-    if(document.getElementById('view-chart').classList.contains('active')) renderChart();
+    renderReports();
+    renderChart();
 };
 
 // --- UI UPDATES ---
@@ -172,7 +175,7 @@ const renderTransactions = (filterText = '') => {
     const filtered = currentMonthData.filter(t => t.description.toLowerCase().includes(filterText.toLowerCase()));
     
     if (filtered.length === 0) {
-        transactionsList.innerHTML = '<div class="empty-state">No transactions found for this month.</div>';
+        transactionsList.innerHTML = '<div class="empty-state">No transactions found.</div>';
         return;
     }
 
@@ -198,7 +201,7 @@ const renderTransactions = (filterText = '') => {
             </div>
             <div style="display:flex; align-items:center; gap: 10px;">
                 <div class="transaction-amount ${amountClass}">${sign}${formatCurrency(transaction.amount)}</div>
-                <button onclick="deleteTransaction(${transaction.id})" style="background:none; border:none; color:var(--accent-expense); font-size:1.2rem; cursor:pointer;"><i class='bx bx-trash'></i></button>
+                <button onclick="deleteTransaction(${transaction.id})" style="background:none; border:none; color:var(--text-muted); font-size:1.2rem; cursor:pointer;"><i class='bx bx-trash'></i></button>
             </div>
         `;
         transactionsList.appendChild(item);
@@ -214,87 +217,73 @@ window.deleteTransaction = (id) => {
     }
 };
 
-// --- CALENDAR VIEW ---
-const renderCalendar = () => {
-    calendarGrid.innerHTML = '';
-    const year = currentDate.getFullYear();
-    const month = currentDate.getMonth();
-    
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    currentMonthYear.innerText = `${monthNames[month]} ${year}`;
+// --- REPORTS VIEW ---
+const renderReports = () => {
+    const currentMonthData = getFilteredTransactions();
+    const income = currentMonthData.filter(t => t.type === 'income').reduce((acc, t) => acc + t.amount, 0);
+    const expense = currentMonthData.filter(t => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0);
+    const balance = income - expense;
 
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const firstDayIndex = new Date(year, month, 1).getDay();
+    const monthNames = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    const monthNum = parseInt(currentViewMonth.split('-')[1]);
+    reportMonthLabel.innerText = monthNames[monthNum - 1];
 
-    const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-    daysOfWeek.forEach(day => {
-        calendarGrid.innerHTML += `<div class="cal-day-header">${day}</div>`;
-    });
+    repExpenses.innerText = formatNumber(expense);
+    repIncome.innerText = formatNumber(income);
+    repBalance.innerText = formatNumber(balance);
 
-    for (let i = 0; i < firstDayIndex; i++) {
-        calendarGrid.innerHTML += `<div class="cal-day empty"></div>`;
-    }
-
-    for (let i = 1; i <= daysInMonth; i++) {
-        const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(i).padStart(2, '0')}`;
-        const dayData = transactions.filter(t => t.date === dateStr); // Still filters ALL transactions for this date
-        
-        const hasDataClass = dayData.length > 0 ? 'has-data' : '';
-        const indicator = dayData.length > 0 ? `<div class="cal-indicator"></div>` : '';
-
-        calendarGrid.innerHTML += `
-            <div class="cal-day ${hasDataClass}" data-date="${dateStr}">
-                ${i}
-                ${indicator}
-            </div>
-        `;
-    }
-
-    document.querySelectorAll('.cal-day.has-data').forEach(day => {
-        day.addEventListener('click', () => {
-            document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('active'));
-            day.classList.add('active');
-            renderCalendarDayTransactions(day.dataset.date);
-        });
-    });
+    repBudgetLimit.innerText = settings.limitEnabled ? formatNumber(settings.dailyLimit * 30) : '0';
+    repBudgetExpense.innerText = formatNumber(expense);
+    repBudgetRem.innerText = settings.limitEnabled ? formatNumber((settings.dailyLimit * 30) - expense) : formatNumber(-expense);
 };
 
-const renderCalendarDayTransactions = (dateStr) => {
-    const dayData = transactions.filter(t => t.date === dateStr);
-    calendarTransactions.innerHTML = `<h3>${dateStr}</h3>`;
-    
-    if (dayData.length === 0) {
-        calendarTransactions.innerHTML += '<p class="empty-state">No transactions.</p>';
-        return;
-    }
-
-    dayData.forEach(transaction => {
-        const catData = getCategoryData(transaction.type, transaction.category, transaction.customCategoryName);
-        const isLimitExceeded = transaction.type === 'expense' && checkDailyLimit(transaction.date);
-        const color = transaction.type === 'income' ? 'var(--accent-income)' : (isLimitExceeded ? 'var(--accent-expense)' : 'var(--text-main)');
-        
-        calendarTransactions.innerHTML += `
-            <div style="display:flex; justify-content:space-between; margin-top:10px; padding:10px; background:var(--surface-dark); border-radius:8px;">
-                <div><strong>${transaction.description}</strong><br><small>${catData.label}</small></div>
-                <div style="color:${color}; font-weight:bold;">${transaction.type === 'income' ? '+' : '-'}${formatCurrency(transaction.amount)}</div>
-            </div>
-        `;
-    });
-};
 
 // --- CHART VIEW ---
+tabExpenses.addEventListener('click', () => { currentChartType = 'expense'; tabExpenses.classList.add('active'); tabIncome.classList.remove('active'); renderChart(); });
+tabIncome.addEventListener('click', () => { currentChartType = 'income'; tabIncome.classList.add('active'); tabExpenses.classList.remove('active'); renderChart(); });
+
 const renderChart = () => {
     const ctx = expenseChartCanvas.getContext('2d');
     
-    const expensesByCategory = {};
+    const byCategory = {};
+    let totalAmount = 0;
+    
     const currentMonthData = getFilteredTransactions();
-    currentMonthData.filter(t => t.type === 'expense').forEach(t => {
-        const cat = getCategoryData('expense', t.category, t.customCategoryName).label;
-        expensesByCategory[cat] = (expensesByCategory[cat] || 0) + t.amount;
+    currentMonthData.filter(t => t.type === currentChartType).forEach(t => {
+        const cat = getCategoryData(currentChartType, t.category, t.customCategoryName);
+        if(!byCategory[cat.label]) byCategory[cat.label] = { amount: 0, icon: cat.icon, color: cat.colorHex };
+        byCategory[cat.label].amount += t.amount;
+        totalAmount += t.amount;
     });
 
-    const labels = Object.keys(expensesByCategory);
-    const data = Object.values(expensesByCategory);
+    chartCenterText.innerText = formatNumber(totalAmount);
+    categoryBarsContainer.innerHTML = '';
+
+    const sortedCats = Object.keys(byCategory).sort((a,b) => byCategory[b].amount - byCategory[a].amount);
+    
+    sortedCats.forEach(catLabel => {
+        const data = byCategory[catLabel];
+        const pct = totalAmount > 0 ? ((data.amount / totalAmount) * 100).toFixed(2) : 0;
+        
+        categoryBarsContainer.innerHTML += `
+            <div class="cat-bar-item">
+                <div class="cat-bar-icon" style="color:${data.color};"><i class='bx ${data.icon}'></i></div>
+                <div class="cat-bar-content">
+                    <div class="cat-bar-header">
+                        <span>${catLabel}</span>
+                        <div><span>${formatNumber(data.amount)}</span> <span class="cat-bar-pct">${pct}%</span></div>
+                    </div>
+                    <div class="cat-bar-track">
+                        <div class="cat-bar-fill" style="width: ${pct}%; background-color: ${data.color};"></div>
+                    </div>
+                </div>
+            </div>
+        `;
+    });
+
+    const labels = sortedCats;
+    const data = sortedCats.map(l => byCategory[l].amount);
+    const colors = sortedCats.map(l => byCategory[l].color);
 
     if (expenseChartInstance) expenseChartInstance.destroy();
 
@@ -309,33 +298,40 @@ const renderChart = () => {
             labels: labels,
             datasets: [{
                 data: data,
-                backgroundColor: ['#ef4444', '#f97316', '#06b6d4', '#ec4899', '#a8a29e'],
-                borderWidth: 0
+                backgroundColor: colors,
+                borderWidth: 0,
+                cutout: '75%'
             }]
         },
         options: {
             responsive: true,
             plugins: {
-                legend: { position: 'bottom', labels: { color: '#f8fafc' } }
-            }
+                legend: { display: false }
+            },
+            layout: { padding: 10 }
         }
     });
 };
 
 // --- NAVIGATION LOGIC ---
+const switchView = (targetId) => {
+    tabViews.forEach(view => view.classList.remove('active'));
+    document.getElementById(targetId).classList.add('active');
+};
+
 navItems.forEach(item => {
     item.addEventListener('click', () => {
+        // Prevent activation if it's the spacer
+        if(item.classList.contains('nav-item-spacer')) return;
+        
         navItems.forEach(nav => nav.classList.remove('active'));
         item.classList.add('active');
-        
-        const targetId = item.dataset.target;
-        tabViews.forEach(view => view.classList.remove('active'));
-        document.getElementById(targetId).classList.add('active');
-
-        if (targetId === 'view-calendar') renderCalendar();
-        if (targetId === 'view-chart') renderChart();
+        switchView(item.dataset.target);
     });
 });
+
+openSettingsBtn.addEventListener('click', () => switchView('view-settings'));
+backToProfileBtn.addEventListener('click', () => switchView('view-profile'));
 
 // --- MODAL & FORM LOGIC ---
 const updateCategoryOptions = () => {
@@ -360,7 +356,7 @@ const handleCategoryChange = () => {
 
 fabBtn.addEventListener('click', () => {
     transactionModal.classList.add('active');
-    transactionDateInput.valueAsDate = new Date(); // default to today
+    transactionDateInput.valueAsDate = new Date(); 
     updateCategoryOptions();
 });
 
@@ -394,14 +390,10 @@ transactionForm.addEventListener('submit', (e) => {
 
     populateMonthSelector();
     
-    // Auto-switch to the month of the newly added transaction
     const newTxMonth = dateStr.substring(0, 7);
     if (newTxMonth !== currentViewMonth) {
         currentViewMonth = newTxMonth;
         monthSelector.value = currentViewMonth;
-        const [year, monthNum] = currentViewMonth.split('-');
-        currentDate.setFullYear(parseInt(year));
-        currentDate.setMonth(parseInt(monthNum) - 1);
     }
 
     updateAllViews();
@@ -410,208 +402,57 @@ transactionForm.addEventListener('submit', (e) => {
     transactionForm.reset();
 });
 
-/// --- PRO VERSION LOGIC ---
-let currentOtpHash = null;
-let currentProCodeHash = localStorage.getItem('proCodeHash') || null;
-
-const apiCall = async (url, body) => {
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    const data = await response.json();
-    if (!response.ok) throw new Error(data.error || 'API Request Failed');
-    return data;
-};
-
-const initProState = () => {
-    if (proSettings.isPro) {
-        proLockedState.style.display = 'none';
-        proUnlockedState.style.display = 'block';
-        limitToggle.disabled = false;
-        limitToggle.checked = proSettings.limitEnabled;
-        if(proSettings.limitEnabled) limitInputGroup.style.display = 'block';
-        dailyLimitAmount.value = proSettings.dailyLimit;
-    } else {
-        proCountryCode.innerHTML = fullCountryCodes.map(c => `<option value="${c.code}">${c.name} (${c.code})</option>`).join('');
-    }
-    
+// --- SETTINGS LOGIC ---
+const initSettings = () => {
     currencySelect.innerHTML = allCurrencies.map(c => `<option value="${c}">${c}</option>`).join('');
-    currencySelect.value = proSettings.currency;
+    currencySelect.value = settings.currency;
+    currencyValDisplay.innerText = settings.currency;
 };
-
-proVerificationForm.addEventListener('submit', async (e) => {
-    e.preventDefault();
-    const email = document.getElementById('proEmail').value;
-    const sendBtn = document.getElementById('sendOtpBtn');
-    
-    sendBtn.innerText = 'Sending...';
-    sendBtn.disabled = true;
-    
-    try {
-        const data = await apiCall('/api/request-otp', { email });
-        currentOtpHash = data.hash; // Save the hash for verification
-        
-        sendBtn.innerText = 'Send Verification Code';
-        sendBtn.disabled = false;
-        alert("Verification code sent to your email!");
-        
-        proVerificationForm.style.display = 'none';
-        document.getElementById('otpSection').style.display = 'block';
-    } catch (error) {
-        sendBtn.innerText = 'Send Verification Code';
-        sendBtn.disabled = false;
-        alert("Email Error: " + error.message);
-    }
-});
-
-document.getElementById('verifyOtpBtn').addEventListener('click', async () => {
-    const inputOtp = document.getElementById('otpInput').value;
-    const email = document.getElementById('proEmail').value;
-    const verifyBtn = document.getElementById('verifyOtpBtn');
-    
-    if (!currentOtpHash) {
-        alert("Please request an OTP first.");
-        return;
-    }
-    
-    verifyBtn.innerText = 'Verifying & Notifying Admin...';
-    verifyBtn.disabled = true;
-    
-    const userData = {
-        name: document.getElementById('proName').value,
-        phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
-        email: email
-    };
-    
-    try {
-        const data = await apiCall('/api/verify-otp', { email, otp: inputOtp, hash: currentOtpHash, userData });
-        
-        // Save the Pro Code hash securely in localStorage
-        currentProCodeHash = data.proCodeHash;
-        localStorage.setItem('proCodeHash', currentProCodeHash);
-        
-        alert("Email Verified! We have notified the Admin. Please wait for the Admin to send you your PRO CODE.");
-        document.getElementById('otpSection').style.display = 'none';
-        document.getElementById('proCodeSection').style.display = 'block';
-    } catch (error) {
-        alert("Error: " + error.message);
-        verifyBtn.innerText = 'Verify Email';
-        verifyBtn.disabled = false;
-    }
-});
-
-// Since the polling logic removed verifyProCodeBtn, we need to ensure the HTML still has it, 
-// but assuming the original HTML had it based on the user's snippet.
-// Add the event listener for Pro Code verification
-const verifyProCodeBtn = document.getElementById('verifyProCodeBtn');
-if (verifyProCodeBtn) {
-    verifyProCodeBtn.addEventListener('click', async () => {
-        const inputProCode = document.getElementById('proCodeInput').value.trim();
-        const btn = document.getElementById('verifyProCodeBtn');
-        
-        if (!currentProCodeHash) {
-            alert("Session expired. Please verify your email again.");
-            return;
-        }
-        
-        btn.innerText = 'Verifying...';
-        btn.disabled = true;
-        
-        try {
-            await apiCall('/api/check-pro-code', { code: inputProCode, hash: currentProCodeHash });
-            
-            alert("Pro version unlocked successfully!");
-            proSettings.isPro = true;
-            proSettings.userData = {
-                name: document.getElementById('proName').value,
-                phone: document.getElementById('proCountryCode').value + ' ' + document.getElementById('proPhone').value,
-                email: document.getElementById('proEmail').value
-            };
-            saveState();
-            initProState();
-            
-            // Clean up
-            localStorage.removeItem('proCodeHash');
-        } catch (error) {
-            alert("Error: " + error.message);
-        } finally {
-            btn.innerText = 'Unlock Pro Access';
-            btn.disabled = false;
-        }
-    });
-}
-
-// ... limit toggle logic follows ...
-
-limitToggle.addEventListener('change', (e) => {
-    proSettings.limitEnabled = e.target.checked;
-    limitInputGroup.style.display = e.target.checked ? 'block' : 'none';
-    saveState();
-});
-
-dailyLimitAmount.addEventListener('input', (e) => {
-    proSettings.dailyLimit = parseFloat(e.target.value) || 0;
-    saveState();
-    updateAllViews();
-});
 
 currencySelect.addEventListener('change', (e) => {
-    proSettings.currency = e.target.value;
+    settings.currency = e.target.value;
+    currencyValDisplay.innerText = settings.currency;
     saveState();
     updateAllViews();
 });
 
-emailReportBtn.addEventListener('click', () => {
-    if (!proSettings.userData) return;
-    const currentMonthData = getFilteredTransactions();
-    const expenses = currentMonthData.filter(t=>t.type==='expense').reduce((a,b)=>a+b.amount,0);
-    const income = currentMonthData.filter(t=>t.type==='income').reduce((a,b)=>a+b.amount,0);
-    
-    const [year, monthNum] = currentViewMonth.split('-');
-    const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
-    const monthName = monthNames[parseInt(monthNum) - 1];
-    
-    alert(`Report for ${monthName} ${year} Generated Locally!\n\nTotal Income: $${income}\nTotal Expenses: $${expenses}\n\n(Email sending disabled for security)`);
+// Limit Modal Events
+const showLimitModal = () => {
+    limitModal.classList.add('active');
+    limitToggle.checked = settings.limitEnabled;
+    limitInputGroup.style.display = settings.limitEnabled ? 'block' : 'none';
+    dailyLimitAmount.value = settings.dailyLimit || '';
+};
+
+if (openLimitBtn) openLimitBtn.addEventListener('click', showLimitModal);
+if (openLimitBtnRep) openLimitBtnRep.addEventListener('click', showLimitModal);
+
+closeLimitBtn.addEventListener('click', () => limitModal.classList.remove('active'));
+
+limitToggle.addEventListener('change', (e) => {
+    limitInputGroup.style.display = e.target.checked ? 'block' : 'none';
 });
 
-// Calendar Controls
-prevMonthBtn.addEventListener('click', () => { 
-    currentDate.setMonth(currentDate.getMonth() - 1); 
-    // Auto sync dropdown
-    currentViewMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    populateMonthSelector();
-    monthSelector.value = currentViewMonth;
+saveLimitBtn.addEventListener('click', () => {
+    settings.limitEnabled = limitToggle.checked;
+    settings.dailyLimit = parseFloat(dailyLimitAmount.value) || 0;
+    saveState();
     updateAllViews();
+    limitModal.classList.remove('active');
 });
 
-nextMonthBtn.addEventListener('click', () => { 
-    currentDate.setMonth(currentDate.getMonth() + 1); 
-    // Auto sync dropdown
-    currentViewMonth = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, '0')}`;
-    populateMonthSelector();
-    monthSelector.value = currentViewMonth;
-    updateAllViews();
+// Delete Data
+deleteDataBtn.addEventListener('click', () => {
+    if(confirm("Are you sure you want to delete ALL data? This cannot be undone.")) {
+        transactions = [];
+        saveState();
+        populateMonthSelector();
+        updateAllViews();
+        alert("Data cleared successfully.");
+    }
 });
-
-// Reset Pro Version (For Testing)
-const resetProBtn = document.getElementById('resetProBtn');
-if (resetProBtn) {
-    resetProBtn.addEventListener('click', () => {
-        if (confirm("This will lock the Pro Version and reset your pro data. Continue?")) {
-            proSettings.isPro = false;
-            proSettings.userData = null;
-            proSettings.limitEnabled = false;
-            proSettings.dailyLimit = 0;
-            saveState();
-            localStorage.removeItem('proCodeHash');
-            window.location.reload();
-        }
-    });
-}
 
 // Init
-initProState();
+initSettings();
 populateMonthSelector();
 updateAllViews();
