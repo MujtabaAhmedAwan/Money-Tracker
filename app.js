@@ -86,8 +86,6 @@ const expenseCategories = [
     { id: 'custom', label: 'Custom (+)', icon: 'bx-plus-circle', colorClass: 'cat-icon-custom', colorHex: '#a8a29e' }
 ];
 
-const allCurrencies = ['USD', 'EUR', 'GBP', 'JPY', 'AUD', 'CAD', 'CHF', 'CNY', 'SEK', 'NZD', 'PKR'];
-
 // --- CORE FUNCTIONS ---
 const formatCurrency = (amount) => {
     return new Intl.NumberFormat(undefined, { style: 'currency', currency: settings.currency }).format(amount);
