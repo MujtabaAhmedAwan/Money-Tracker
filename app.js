@@ -43,6 +43,9 @@ const currencySelect = document.getElementById('currencySelect');
 const currencyValDisplay = document.getElementById('currencyValDisplay');
 const openLimitBtn = document.getElementById('openLimitBtn');
 const deleteDataBtn = document.getElementById('deleteDataBtn');
+const exportDataBtn = document.getElementById('exportDataBtn');
+const soundEffectToggle = document.getElementById('soundEffectToggle');
+const comingSoonItems = document.querySelectorAll('.coming-soon');
 const userNameInput = document.getElementById('userNameInput');
 
 // Limits Modal
@@ -408,6 +411,8 @@ const initSettings = () => {
     if (!settings.userName) settings.userName = 'Sultan Mujtaba Ahmed Awan';
     userNameInput.value = settings.userName;
     homeUserName.innerText = settings.userName;
+    if (settings.soundEnabled === undefined) settings.soundEnabled = true;
+    soundEffectToggle.checked = settings.soundEnabled;
     
     currencySelect.innerHTML = allCurrencies.map(c => `<option value="${c}">${c}</option>`).join('');
     currencySelect.value = settings.currency;
@@ -461,6 +466,29 @@ deleteDataBtn.addEventListener('click', () => {
         updateAllViews();
         alert("Data cleared successfully.");
     }
+});
+
+// Export Data
+exportDataBtn.addEventListener('click', () => {
+    if (transactions.length === 0) return alert("No data to export.");
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(transactions, null, 2));
+    const a = document.createElement('a');
+    a.href = dataStr;
+    a.download = "money_tracker_backup.json";
+    a.click();
+});
+
+// Sound Effect
+soundEffectToggle.addEventListener('change', (e) => {
+    settings.soundEnabled = e.target.checked;
+    saveState();
+});
+
+// Coming Soon Alerts
+comingSoonItems.forEach(item => {
+    item.addEventListener('click', () => {
+        alert("This feature is coming soon!");
+    });
 });
 
 // Init
