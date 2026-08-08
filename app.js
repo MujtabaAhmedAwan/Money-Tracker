@@ -2,11 +2,13 @@
 let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let settings = JSON.parse(localStorage.getItem('settings')) || {
     currency: 'USD',
+    language: 'English',
     limitEnabled: false,
     dailyLimit: 0,
     userName: 'Sultan Mujtaba Ahmed Awan'
 };
 if (!settings.currency) settings.currency = 'USD';
+if (!settings.language) settings.language = 'English';
 
 let currentViewMonth = `${new Date().getFullYear()}-${String(new Date().getMonth() + 1).padStart(2, '0')}`;
 
@@ -39,6 +41,8 @@ const transactionDateInput = document.getElementById('transactionDate');
 // Settings & Profile
 const openSettingsBtn = document.getElementById('openSettingsBtn');
 const backToProfileBtn = document.getElementById('backToProfileBtn');
+const languageSelect = document.getElementById('languageSelect');
+const languageValDisplay = document.getElementById('languageValDisplay');
 const currencySelect = document.getElementById('currencySelect');
 const currencyValDisplay = document.getElementById('currencyValDisplay');
 const openLimitBtn = document.getElementById('openLimitBtn');
@@ -423,12 +427,23 @@ const initSettings = () => {
     currencySelect.innerHTML = allCurrencies.map(c => `<option value="${c}">${c}</option>`).join('');
     currencySelect.value = settings.currency;
     currencyValDisplay.innerText = settings.currency;
+    
+    languageSelect.innerHTML = allLanguages.map(l => `<option value="${l}">${l}</option>`).join('');
+    languageSelect.value = settings.language;
+    languageValDisplay.innerText = settings.language;
 };
 
 userNameInput.addEventListener('input', (e) => {
     settings.userName = e.target.value || 'User';
     homeUserName.innerText = settings.userName;
     saveState();
+});
+
+languageSelect.addEventListener('change', (e) => {
+    settings.language = e.target.value;
+    languageValDisplay.innerText = settings.language;
+    saveState();
+    updateAllViews();
 });
 
 currencySelect.addEventListener('change', (e) => {
