@@ -3,7 +3,8 @@ let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
 let settings = JSON.parse(localStorage.getItem('settings')) || {
     currency: 'USD',
     limitEnabled: false,
-    dailyLimit: 0
+    dailyLimit: 0,
+    userName: 'Sultan Mujtaba Ahmed Awan'
 };
 if (!settings.currency) settings.currency = 'USD';
 
@@ -22,6 +23,7 @@ const incomeAmount = document.getElementById('incomeAmount');
 const expenseAmount = document.getElementById('expenseAmount');
 const transactionsList = document.getElementById('transactionsList');
 const searchInput = document.getElementById('searchInput');
+const homeUserName = document.getElementById('homeUserName');
 
 // Modal
 const transactionModal = document.getElementById('transactionModal');
@@ -41,6 +43,7 @@ const currencySelect = document.getElementById('currencySelect');
 const currencyValDisplay = document.getElementById('currencyValDisplay');
 const openLimitBtn = document.getElementById('openLimitBtn');
 const deleteDataBtn = document.getElementById('deleteDataBtn');
+const userNameInput = document.getElementById('userNameInput');
 
 // Limits Modal
 const limitModal = document.getElementById('limitModal');
@@ -402,10 +405,20 @@ transactionForm.addEventListener('submit', (e) => {
 
 // --- SETTINGS LOGIC ---
 const initSettings = () => {
+    if (!settings.userName) settings.userName = 'Sultan Mujtaba Ahmed Awan';
+    userNameInput.value = settings.userName;
+    homeUserName.innerText = settings.userName;
+    
     currencySelect.innerHTML = allCurrencies.map(c => `<option value="${c}">${c}</option>`).join('');
     currencySelect.value = settings.currency;
     currencyValDisplay.innerText = settings.currency;
 };
+
+userNameInput.addEventListener('input', (e) => {
+    settings.userName = e.target.value || 'User';
+    homeUserName.innerText = settings.userName;
+    saveState();
+});
 
 currencySelect.addEventListener('change', (e) => {
     settings.currency = e.target.value;
