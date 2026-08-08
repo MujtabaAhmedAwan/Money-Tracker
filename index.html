@@ -186,10 +186,6 @@
                 </header>
                 
                 <div class="settings-list-scroll">
-                    <div class="menu-item coming-soon"><i class='bx bx-user text-yellow'></i><span>My Profile</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-share-alt text-yellow'></i><span>Data Sharing</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-category text-yellow'></i><span>Category settings</span><i class='bx bx-chevron-right arrow'></i></div>
-                    
                     <div class="menu-item">
                         <i class='bx bx-dollar-circle text-yellow'></i>
                         <span>Default currency</span>
@@ -199,24 +195,6 @@
                             <i class='bx bx-chevron-right arrow'></i>
                         </div>
                     </div>
-
-                    <div class="menu-item coming-soon"><i class='bx bx-bell text-yellow'></i><span>Reminder</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-refresh text-yellow'></i><span>Recurring Transactions</span><i class='bx bx-chevron-right arrow'></i></div>
-                    
-                    <div class="menu-item coming-soon">
-                        <i class='bx bx-calendar text-yellow'></i>
-                        <span>Monthly Start Date</span>
-                        <div class="setting-right-val">
-                            <span class="badge-yellow">1st</span>
-                            <i class='bx bx-chevron-right arrow'></i>
-                        </div>
-                    </div>
-
-                    <div class="menu-item coming-soon"><i class='bx bx-palette text-yellow'></i><span>Themes</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-font text-yellow'></i><span>Font Size</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-home text-yellow'></i><span>Home page settings</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-book text-yellow'></i><span>My Cash Books</span><i class='bx bx-chevron-right arrow'></i></div>
-                    <div class="menu-item coming-soon"><i class='bx bx-wallet text-yellow'></i><span>Accounts</span><i class='bx bx-chevron-right arrow'></i></div>
                     
                     <div class="menu-item" id="openLimitBtn">
                         <i class='bx bx-target-lock text-yellow'></i>
@@ -232,7 +210,7 @@
                         <label class="switch"><input type="checkbox" id="soundEffectToggle" checked><span class="slider round"></span></label>
                     </div>
                     
-                    <div class="menu-item coming-soon">
+                    <div class="menu-item" id="openCalculatorBtn">
                         <i class='bx bx-calculator text-yellow'></i><span>Calculator</span><i class='bx bx-chevron-right arrow'></i>
                     </div>
                     
@@ -341,6 +319,36 @@
                     </div>
                 </div>
                 <button id="saveLimitBtn" class="submit-btn">Save Settings</button>
+            </div>
+        </div>
+
+        <!-- Calculator Modal -->
+        <div class="modal-overlay" id="calcModal">
+            <div class="modal-content" style="max-width: 320px;">
+                <div class="modal-header">
+                    <h2>Calculator</h2>
+                    <button class="close-modal-btn" id="closeCalcBtn"><i class='bx bx-x'></i></button>
+                </div>
+                <div class="calc-screen" id="calcScreen">0</div>
+                <div class="calc-grid">
+                    <button class="calc-btn calc-clear" onclick="calcInput('C')">C</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('/')">/</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('*')">×</button>
+                    <button class="calc-btn calc-op" onclick="calcInput('-')">-</button>
+                    <button class="calc-btn" onclick="calcInput('7')">7</button>
+                    <button class="calc-btn" onclick="calcInput('8')">8</button>
+                    <button class="calc-btn" onclick="calcInput('9')">9</button>
+                    <button class="calc-btn calc-op calc-tall" onclick="calcInput('+')">+</button>
+                    <button class="calc-btn" onclick="calcInput('4')">4</button>
+                    <button class="calc-btn" onclick="calcInput('5')">5</button>
+                    <button class="calc-btn" onclick="calcInput('6')">6</button>
+                    <button class="calc-btn" onclick="calcInput('1')">1</button>
+                    <button class="calc-btn" onclick="calcInput('2')">2</button>
+                    <button class="calc-btn" onclick="calcInput('3')">3</button>
+                    <button class="calc-btn calc-eq calc-tall" onclick="calcInput('=')">=</button>
+                    <button class="calc-btn calc-wide" onclick="calcInput('0')">0</button>
+                    <button class="calc-btn" onclick="calcInput('.')">.</button>
+                </div>
             </div>
         </div>
 

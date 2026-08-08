@@ -57,6 +57,12 @@ const dailyLimitAmount = document.getElementById('dailyLimitAmount');
 const saveLimitBtn = document.getElementById('saveLimitBtn');
 const openLimitBtnRep = document.getElementById('openLimitBtnRep');
 
+// Calculator Modal
+const openCalculatorBtn = document.getElementById('openCalculatorBtn');
+const calcModal = document.getElementById('calcModal');
+const closeCalcBtn = document.getElementById('closeCalcBtn');
+const calcScreen = document.getElementById('calcScreen');
+
 // Chart Elements
 const expenseChartCanvas = document.getElementById('expenseChart');
 const chartCenterText = document.getElementById('chartCenterText');
@@ -490,6 +496,44 @@ comingSoonItems.forEach(item => {
         alert("This feature is coming soon!");
     });
 });
+
+// Calculator Logic
+let calcValue = '0';
+window.calcInput = (val) => {
+    if (val === 'C') {
+        calcValue = '0';
+    } else if (val === '=') {
+        try {
+            calcValue = eval(calcValue).toString();
+        } catch(e) {
+            calcValue = 'Error';
+        }
+    } else {
+        if (calcValue === '0' || calcValue === 'Error') {
+            if (['/', '*', '-', '+'].includes(val)) {
+                calcValue = '0' + val;
+            } else {
+                calcValue = val;
+            }
+        } else {
+            calcValue += val;
+        }
+    }
+    calcScreen.innerText = calcValue;
+};
+
+if (openCalculatorBtn) {
+    openCalculatorBtn.addEventListener('click', () => {
+        calcModal.classList.add('active');
+        calcValue = '0';
+        calcScreen.innerText = calcValue;
+    });
+}
+if (closeCalcBtn) {
+    closeCalcBtn.addEventListener('click', () => {
+        calcModal.classList.remove('active');
+    });
+}
 
 // Init
 initSettings();

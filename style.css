@@ -259,3 +259,15 @@ input:checked + .slider:before { transform: translateX(20px); }
 .cat-icon-salary { color: #10b981; } .cat-icon-investment { color: #3b82f6; } .cat-icon-part-time { color: #8b5cf6; } .cat-icon-bonus { color: #facc15; }
 .cat-icon-food { color: #10b981; } .cat-icon-transport { color: #f472b6; } .cat-icon-utilities { color: #06b6d4; } .cat-icon-entertainment { color: #ec4899; }
 .cat-icon-custom { color: #a8a29e; }
+
+/* Calculator UI */
+.calc-screen { background: var(--surface-light); border-radius: var(--border-radius-sm); padding: 16px; font-size: 2rem; font-weight: 600; text-align: right; margin-bottom: 16px; word-wrap: break-word; min-height: 70px; display: flex; align-items: center; justify-content: flex-end; }
+.calc-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; }
+.calc-btn { background: var(--surface-dark); border: none; color: var(--text-main); font-size: 1.25rem; font-weight: 500; border-radius: var(--border-radius-sm); padding: 16px; cursor: pointer; transition: 0.1s; }
+.calc-btn:active { transform: scale(0.95); }
+.calc-op { color: var(--accent-primary); background: rgba(250, 204, 21, 0.1); }
+.calc-clear { color: var(--accent-expense); background: rgba(239, 68, 68, 0.1); }
+.calc-eq { background: var(--accent-primary); color: var(--bg-dark); font-weight: 700; grid-row: span 2; }
+.calc-tall { grid-row: span 2; }
+.calc-wide { grid-column: span 2; border-radius: var(--border-radius-sm); }
+
