@@ -1,0 +1,21 @@
+{
+  "name": "Money Tracker",
+  "short_name": "Money",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FDFBF7",
+  "theme_color": "#F59E0B",
+  "description": "A beautiful budget manager app",
+  "icons": [
+    {
+      "src": "https://ui-avatars.com/api/?name=MT&background=f59e0b&color=fff&size=192",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://ui-avatars.com/api/?name=MT&background=f59e0b&color=fff&size=512",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
