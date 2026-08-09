@@ -102,12 +102,12 @@ body {
 .user-name { font-size: 1.25rem; font-weight: 600; }
 
 .balance-section { display: flex; flex-direction: column; gap: 16px; }
-.main-balance-card { background: var(--surface-dark); border-radius: var(--border-radius-lg); padding: 24px; text-align: center; }
+.main-balance-card { background: var(--surface-dark); border-radius: var(--border-radius-lg); padding: 24px; text-align: center; box-shadow: var(--shadow-subtle); }
 .card-label { font-size: 0.9rem; color: var(--text-muted); margin-bottom: 8px; }
 .card-amount { font-size: 2.2rem; font-weight: 700; color: var(--text-main); }
 
 .summary-cards { display: flex; gap: 12px; }
-.summary-card { flex: 1; background-color: var(--surface-dark); border-radius: var(--border-radius-md); padding: 12px; display: flex; align-items: center; gap: 8px; min-width: 0; }
+.summary-card { flex: 1; background-color: var(--surface-dark); border-radius: var(--border-radius-md); padding: 12px; display: flex; align-items: center; gap: 8px; min-width: 0; box-shadow: var(--shadow-subtle); }
 .summary-card .card-details { overflow: hidden; }
 .summary-card .card-amount { font-size: 1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .card-icon { width: 32px; height: 32px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; flex-shrink: 0; }
@@ -118,7 +118,7 @@ body {
 .section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
 .view-all-btn { background: transparent; border: none; color: var(--accent-primary); cursor: pointer; font-weight: 500;}
 .transactions-list { display: flex; flex-direction: column; gap: 12px; }
-.transaction-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-dark); padding: 12px; border-radius: var(--border-radius-md); }
+.transaction-item { display: flex; justify-content: space-between; align-items: center; background-color: var(--surface-dark); padding: 12px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-subtle); }
 .transaction-item.limit-exceeded { border: 1px solid var(--accent-expense); background-color: rgba(239, 68, 68, 0.05); }
 .transaction-info { display: flex; align-items: center; gap: 12px; min-width: 0; }
 .transaction-icon { width: 36px; height: 36px; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; background-color: var(--surface-light); flex-shrink: 0; }
@@ -152,11 +152,11 @@ body {
 /* Reports Tab */
 .report-section { margin-bottom: 24px; }
 .report-section-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; color: var(--text-muted); font-size: 0.9rem;}
-.stats-row { display: flex; justify-content: space-between; background: var(--surface-dark); padding: 20px; border-radius: var(--border-radius-md); text-align: center;}
+.stats-row { display: flex; justify-content: space-between; background: var(--surface-dark); padding: 20px; border-radius: var(--border-radius-md); text-align: center; box-shadow: var(--shadow-subtle); }
 .stat-col p { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 8px;}
 .stat-col h4 { font-size: 1.1rem; font-weight: 600;}
 
-.budget-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); padding: 20px; border-radius: var(--border-radius-md);}
+.budget-row { display: flex; justify-content: space-between; align-items: center; background: var(--surface-dark); padding: 20px; border-radius: var(--border-radius-md); box-shadow: var(--shadow-subtle); }
 .budget-stats { flex: 1; display: flex; flex-direction: column; gap: 12px;}
 .budget-line { display: flex; justify-content: space-between; padding-right: 20px;}
 .budget-line p { color: var(--text-muted); font-size: 0.9rem;}
@@ -167,7 +167,7 @@ body {
 .ring-inner span { font-size: 0.6rem; text-align: center; }
 
 /* Profile View */
-.profile-header-card { display: flex; align-items: center; gap: 16px; background: var(--surface-dark); padding: 24px; border-radius: var(--border-radius-md); margin-bottom: 24px; }
+.profile-header-card { display: flex; align-items: center; gap: 16px; background: var(--surface-dark); padding: 24px; border-radius: var(--border-radius-md); margin-bottom: 24px; box-shadow: var(--shadow-subtle); }
 .profile-pic-container { width: 64px; height: 64px; background: var(--surface-light); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 2rem; color: var(--text-main); }
 .profile-name-info h2 { font-size: 1.1rem; margin-bottom: 4px;}
 .profile-name-info p { font-size: 0.85rem; color: var(--text-muted); }
