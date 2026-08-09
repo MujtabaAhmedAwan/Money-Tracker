@@ -30,7 +30,9 @@ jobs:
 
       - name: Initialize Capacitor
         run: |
-          npx cap init "Money Tracker" com.money.tracker --web-dir .
+          mkdir www
+          cp -r *.html *.js *.css manifest.json www/ 2>/dev/null || true
+          npx cap init "Money Tracker" com.money.tracker --web-dir www
           npx cap add android
           npx cap sync android
 
